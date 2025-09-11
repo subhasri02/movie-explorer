@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: custom styles */
+body {
+  @apply bg-gray-100 text-gray-900;
+}
+.dark body {
+  @apply bg-gray-900 text-white;
+}
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #1f2937; /* gray-800 */
+  color: white;
+  padding: 1rem;
+}
+
+/* Movie Cards */
+.movie-card {
+  transition: transform 0.2s ease-in-out;
+}
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+/* Booking Modal */
+.modal-bg {
+  background: rgba(0, 0, 0, 0.6);
+}
+
