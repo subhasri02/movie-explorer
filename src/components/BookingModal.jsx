@@ -1,4 +1,6 @@
 
+
+
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../auth/firebase";
@@ -98,7 +100,7 @@ const BookingModal = ({ movie, onClose }) => {
           Book {movie.title}
         </h2>
 
-        {/* Seats */}
+        {/* Seats*/ }
         <label className="block mt-2 text-sm font-medium text-gray-900 dark:text-white">
           Seats:
         </label>
@@ -140,7 +142,7 @@ const BookingModal = ({ movie, onClose }) => {
           ))}
         </select>
 
-        {/* Buttons */}
+        {/* Buttons*/ }
         <div className="mt-4 flex justify-end gap-3">
           <button
             onClick={handleBook}

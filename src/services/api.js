@@ -5,7 +5,7 @@ import axios from "axios";
 const API_KEY = process.env.REACT_APP_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 
-export const fetchMovies = async (pages = 5) => {
+export const fetchMovies = async (pages = 50) => {
   try {
     if (!API_KEY) throw new Error("TMDB API key missing!");
 

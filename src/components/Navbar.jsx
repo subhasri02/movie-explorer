@@ -5,11 +5,11 @@ import { useTheme } from "../context/ThemeContext";
 
 const Navbar = () => {
   const { user, isAdmin, logout } = useAuth(); /*user,IsAdmin,Logout */
-  const { theme, toggleTheme } = useTheme(); /* theme, toggleTheme*/
+ const { theme, toggleTheme } = useTheme(); /* theme, toggleTheme*/
 
   return (
-    <nav className="flex justify-between items-center p-4 bg-gray-800 dark:bg-gray-950 text-white shadow-md">
-      {/* Logo */}
+    <nav className=" sticky top-0 z-50 flex justify-between items-center p-4 bg-gray-800 dark:bg-gray-950 text-white shadow-md">
+      {/* Logo*/ }
       <Link to="/" className="text-xl font-bold">
         Movie Explorer 🎬
       </Link>
@@ -25,7 +25,7 @@ const Navbar = () => {
           </Link>
         )}
 
-        {/* Dark/Light Toggle */}
+        {/* Dark/Light Toggle*/ }
         <button
           onClick={toggleTheme}
           className="px-3 py-1 rounded bg-gray-600 hover:bg-gray-700"
@@ -33,7 +33,7 @@ const Navbar = () => {
           {theme === "light" ? "🌙 Dark" : "☀️ Light"}
         </button>
 
-        {/* User Info */}
+        {/* User Info*/ }
         {user ? (
           <>
             <span className="text-sm">{user.displayName || user.email}</span>
@@ -58,3 +58,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

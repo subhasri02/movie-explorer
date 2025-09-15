@@ -1,4 +1,6 @@
 // Manages authentication state and provides auth functions
+
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth, provider } from "../auth/firebase";
 import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -6,34 +8,30 @@ import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPas
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-const ADMIN_EMAIL = "subhasriviswanadhuni17@gmail.com"; // ✅ set admin email here
+const ADMIN_EMAIL = "subhasriviswanadhuni17@gmail.com"; // admin email
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-    setUser(currentUser);
-    setIsAdmin(currentUser?.email === ADMIN_EMAIL); // ✅ correct comparison
-  });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAdmin(currentUser?.email === ADMIN_EMAIL);
+    });
 
-  return () => unsubscribe();
-}, []);
+    return () => unsubscribe();
+  }, []);
 
-
-  // const loginWithGoogle = async () => await signInWithPopup(auth, provider);
-const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    return result.user; // ✅ optional return if needed
-  } catch (err) {
-    console.error("Google login failed:", err);
-    alert("Google login failed. Try again.");
-  }
-};
-
-
+  const loginWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (err) {
+      console.error("Google login failed:", err);
+      alert("Google login failed. Try again.");
+    }
+  };
 
   const registerWithEmail = async (email, password, name) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -48,4 +46,5 @@ const loginWithGoogle = async () => {
     </AuthContext.Provider>
   );
 };
+
 

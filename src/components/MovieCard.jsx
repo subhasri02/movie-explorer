@@ -1,74 +1,84 @@
 
-/*
 
-const IMG_BASE_URL = "https://image.tmdb.org/t/p/w500";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+import BookingModal from "./BookingModal"; // import modal
 
-const MovieCard = ({ movie, onBook }) => (
-  <div
-    className="relative group bg-gray-900 bg-opacity-50 rounded-2xl 
-               shadow-lg overflow-hidden border border-gray-700 
-               hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/50
-               transition-transform duration-300 transform hover:scale-105
-               cursor-pointer backdrop-blur-md"
-  >
-    {/* Poster }
-    <img
-      src={`${IMG_BASE_URL}${movie.poster_path}`}
-      alt={movie.title}
-      className="w-full h-80 object-cover transition duration-300 group-hover:scale-105"
-    />
+const MovieCard = ({ movie }) => {
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerUrl, setTrailerUrl] = useState("");
+  const [isBookingOpen, setIsBookingOpen] = useState(false); // modal state
 
-    {/* Overlay }
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-4">
-      <h3 className="text-lg font-bold">{movie.title}</h3>
-      <p className="text-sm text-gray-300">⭐ {movie.vote_average.toFixed(1)}</p>
-      <button
-        onClick={() => onBook(movie)}
-        className="mt-3 w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold py-2 rounded-lg shadow hover:from-blue-500 hover:to-purple-500 transition"
-      >
-        Book Now
-      </button>
-    </div>
-  </div>
-);
+  const fetchTrailer = async () => {
+    try {
+      const apiKey = process.env.REACT_APP_TMDB_API_KEY;
+      const res = await axios.get(
+        `https://api.themoviedb.org/3/movie/${movie.id}/videos?api_key=${apiKey}&language=en-US`
+      );
+      const trailer = res.data.results.find(
+        (vid) => vid.type === "Trailer" && vid.site === "YouTube"
+      );
+      if (trailer) setTrailerUrl(`https://www.youtube.com/embed/${trailer.key}`);
+    } catch (err) {
+      console.error("Error fetching trailer:", err);
+    }
+  };
 
-export default MovieCard;
-*/
-
-const IMG_BASE_URL = "https://image.tmdb.org/t/p/w500";
-
-const MovieCard = ({ movie, onBook }) => (
-  <div
-    className="bg-white dark:bg-gray-900 rounded-2xl shadow-md overflow-hidden 
-               border border-gray-200 dark:border-gray-700 
-               hover:shadow-xl hover:scale-105 transition transform duration-300"
-  >
-    {/* Poster */}
-    <img
-      src={movie.poster_path ? `${IMG_BASE_URL}${movie.poster_path}` : "/fallback.png"}
-      alt={movie.title}
-      className="w-full h-72 object-cover"
-    />
-
-    {/* Details */}
-    <div className="p-4 flex flex-col justify-between h-40">
-      <div>
-        <h3 className="text-lg font-bold truncate">{movie.title}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          ⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"} / 10
+  return (
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+      <img
+        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+        alt={movie.title}
+        className="w-full h-72 object-cover"
+      />
+      <div className="p-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {movie.title}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+          ⭐ {movie.vote_average}
         </p>
+
+        {/* Book Now button */}
+        <button
+          onClick={() => setIsBookingOpen(true)}
+          className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+        >
+          Book Now
+        </button>
+
+        {/* Trailer toggle */}
+        <button
+          onClick={() => {
+            fetchTrailer();
+            setShowTrailer(!showTrailer);
+          }}
+          className="mt-2 w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+        >
+          {showTrailer ? "Hide Trailer" : "Watch Trailer"}
+        </button>
+
+        {showTrailer && trailerUrl && (
+          <iframe
+            width="100%"
+            height="200"
+            src={trailerUrl}
+            title="Trailer"
+            className="mt-2 rounded-lg"
+            allowFullScreen
+          />
+        )}
       </div>
 
-      <button
-        onClick={() => onBook(movie)}
-        className="mt-3 w-full bg-gradient-to-r from-purple-600 to-blue-500 
-                   text-white font-semibold py-2 rounded-lg shadow 
-                   hover:from-blue-500 hover:to-purple-600 transition"
-      >
-        🎟️ Book Now
-      </button>
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
+        movie={movie}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 export default MovieCard;
