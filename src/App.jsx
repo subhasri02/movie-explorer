@@ -9,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Register from "./pages/Register";  
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminRoute from "./routes/AdminRoute";
 import MovieDetails from "./pages/MovieDetails";
@@ -21,21 +22,22 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          {/* Navbar always visible*/ }
+          {/* Navbar always visible */}
           <Navbar filters={filters} setFilters={setFilters} />
 
-          {/* Page Content*/ }
+          {/* Page Content */}
           <div className="bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100">
             <Routes>
-              {/* Home Page*/ }
+              {/* Home Page */}
               <Route path="/" element={<Home filters={filters} />} />
 
               <Route path="/movie/:id" element={<MovieDetails />} />
 
-              {/* Login Page */}
+              {/* Login & Register Pages */}
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} /> 
 
-              {/* Admin (Protected Route)*/ }
+              {/* Admin (Protected Route) */}
               <Route
                 path="/admin"
                 element={
@@ -53,4 +55,3 @@ function App() {
 }
 
 export default App;
-

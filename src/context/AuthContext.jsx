@@ -1,50 +1,72 @@
-// Manages authentication state and provides auth functions
 
-
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth, provider } from "../auth/firebase";
-import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
-export const useAuth = () => useContext(AuthContext);
-
-const ADMIN_EMAIL = "subhasriviswanadhuni17@gmail.com"; // admin email
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsAdmin(currentUser?.email === ADMIN_EMAIL);
-    });
+  // login
 
-    return () => unsubscribe();
-  }, []);
-
-  const loginWithGoogle = async () => {
+  const login = async (email, password) => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      return result.user;
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
+
+      // Save token & user to localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser(data.user);
+
+      return data.user; 
     } catch (err) {
-      console.error("Google login failed:", err);
-      alert("Google login failed. Try again.");
+      console.error("Login error:", err.message);
+      throw err;
     }
   };
 
-  const registerWithEmail = async (email, password, name) => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    if (cred.user) await updateProfile(cred.user, { displayName: name });
+  // signup
+
+  const signup = async (name, email, password) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signup failed");
+
+      return true; 
+    } catch (err) {
+      console.error("Signup error:", err.message);
+      throw err;
+    }
   };
 
-  const logout = async () => await signOut(auth);
+ // logout
+ 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loginWithGoogle, registerWithEmail, logout }}>
+    <AuthContext.Provider value={{ user, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-
+export const useAuth = () => useContext(AuthContext);

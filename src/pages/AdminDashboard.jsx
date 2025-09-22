@@ -1,11 +1,11 @@
 
 
-import React, { useEffect, useState } from "react";
-import { db } from "../auth/firebase";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { getBookings, deleteBooking, getStats } from "../services/bookingService";
 
 const AdminDashboard = () => {
   const [bookings, setBookings] = useState([]);
+  const [stats, setStats] = useState({ totalBookings: 0, totalTickets: 0, totalRevenue: 0 });
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const bookingsPerPage = 5;
@@ -15,52 +15,51 @@ const AdminDashboard = () => {
     currency: "INR",
   });
 
-  // Fetch bookings from Firestore
   useEffect(() => {
-    const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBookings(data);
-    });
-    return () => unsubscribe();
+    loadBookings();
+    loadStats();
   }, []);
 
-  // Safe date formatter
-  const formatDate = (date) => {
-    if (!date) return "N/A";
+  const loadBookings = async () => {
     try {
-      if (date.toDate) return date.toDate().toLocaleString(); // Firestore Timestamp
-      if (date instanceof Date) return date.toLocaleString();
-      return new Date(date).toLocaleString();
-    } catch {
-      return "Invalid Date";
+      const data = await getBookings();
+      setBookings(data);
+    } catch (err) {
+      console.error("❌ Error loading bookings:", err);
     }
   };
 
+  const loadStats = async () => {
+    try {
+      const data = await getStats();
+      console.log("✅ Stats fetched:", data);
+      setStats(data);
+    } catch (err) {
+      console.error("❌ Error loading stats:", err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Delete this booking?")) {
+      try {
+        await deleteBooking(id);
+        loadBookings();
+        loadStats();
+      } catch (err) {
+        console.error("❌ Error deleting booking:", err);
+      }
+    }
+  };
+
+  // Filtering & Pagination 
   const filteredBookings = bookings.filter((b) =>
-  b.movieTitle?.toLowerCase().includes(search.toLowerCase())
-);
+    b.movieTitle?.toLowerCase().includes(search.toLowerCase())
+  );
 
-
-  // Pagination
   const indexOfLastBooking = currentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
-  const currentBookings = filteredBookings.slice(
-    indexOfFirstBooking,
-    indexOfLastBooking
-  );
+  const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
-
-  // Summary stats
-  const totalBookings = bookings.length;
-  const totalSeats = bookings.reduce((acc, b) => {
-    if (Array.isArray(b.seats)) return acc + b.seats.length;
-    return acc + (b.seats || 1);
-  }, 0);
-  const totalRevenue = bookings.reduce((acc, b) => {
-    const seatsCount = Array.isArray(b.seats) ? b.seats.length : b.seats || 1;
-    return acc + seatsCount * (b.ticketPrice || 100);
-  }, 0);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen dark:bg-gray-900">
@@ -71,32 +70,26 @@ const AdminDashboard = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="p-4 bg-white dark:bg-gray-800 shadow rounded-lg text-center">
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            Total Bookings
-          </h3>
+          <h3 className="text-gray-700 dark:text-gray-300">Total Bookings</h3>
           <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {totalBookings}
+            {stats.totalBookings}
           </p>
         </div>
         <div className="p-4 bg-white dark:bg-gray-800 shadow rounded-lg text-center">
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            Total Tickets
-          </h3>
+          <h3 className="text-gray-700 dark:text-gray-300">Total Tickets</h3>
           <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {totalSeats}
+            {stats.totalTickets}
           </p>
         </div>
         <div className="p-4 bg-white dark:bg-gray-800 shadow rounded-lg text-center">
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            Total Revenue
-          </h3>
+          <h3 className="text-gray-700 dark:text-gray-300">Total Revenue</h3>
           <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {currencyFormatter.format(totalRevenue)}
+            {currencyFormatter.format(stats.totalRevenue)}
           </p>
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search */}
       <div className="flex justify-center mb-6">
         <input
           type="text"
@@ -104,9 +97,9 @@ const AdminDashboard = () => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setCurrentPage(1); // Reset to first page when searching
+            setCurrentPage(1);
           }}
-          className="w-80 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+          className="w-80 px-4 py-2 rounded-lg border shadow-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700"
         />
       </div>
 
@@ -119,38 +112,32 @@ const AdminDashboard = () => {
               <th className="px-6 py-3">Movie</th>
               <th className="px-6 py-3">Seats</th>
               <th className="px-6 py-3">Date</th>
-              <th className="px-6 py-3">Total Amount</th>
+              <th className="px-6 py-3">Time</th>
+              <th className="px-6 py-3">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-gray-900 dark:text-gray-200">
             {currentBookings.length > 0 ? (
               currentBookings.map((b) => (
-                <tr
-                  key={b.id}
-                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  <td className="px-6 py-4">{b.userName || "N/A"}</td>
-                  <td className="px-6 py-4 font-semibold text-purple-600 dark:text-purple-400">
-                    {b.movieTitle || "N/A"}
-                  </td>
+                <tr key={b._id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4">{b.name}</td>
+                  <td className="px-6 py-4">{b.movieTitle}</td>
+                  <td className="px-6 py-4">{b.seats}</td>
+                  <td className="px-6 py-4">{b.date}</td>
+                  <td className="px-6 py-4">{b.time}</td>
                   <td className="px-6 py-4">
-                    {Array.isArray(b.seats) ? b.seats.join(", ") : b.seats || 0}
-                  </td>
-                  <td className="px-6 py-4">{formatDate(b.createdAt)}</td>
-                  <td className="px-6 py-4 font-bold text-green-600">
-                    {currencyFormatter.format(
-                      (Array.isArray(b.seats) ? b.seats.length : b.seats || 1) *
-                        (b.ticketPrice || 100)
-                    )}
+                    <button
+                      onClick={() => handleDelete(b._id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="5"
-                  className="text-center py-6 text-gray-500 dark:text-gray-400"
-                >
+                <td colSpan="6" className="text-center py-6 text-gray-600 dark:text-gray-300">
                   No bookings found
                 </td>
               </tr>
@@ -161,23 +148,21 @@ const AdminDashboard = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2">
+        <div className="flex justify-center mt-6 gap-2 text-gray-900 dark:text-white">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:bg-gray-400"
+            className="px-4 py-2 rounded-lg bg-purple-500 text-white disabled:bg-gray-400"
           >
             Prev
           </button>
-          <span className="px-4 py-2 font-medium">
+          <span className="px-4 py-2">
             Page {currentPage} of {totalPages}
           </span>
           <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:bg-gray-400"
+            className="px-4 py-2 rounded-lg bg-purple-500 text-white disabled:bg-gray-400"
           >
             Next
           </button>
@@ -188,4 +173,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

@@ -8,7 +8,7 @@ const SearchBar = ({ onSearch }) => {
   const handleChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    onSearch(value); // 🔹 live search on every keystroke
+    onSearch(value); 
   };
 
   return (

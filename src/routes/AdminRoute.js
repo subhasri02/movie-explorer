@@ -1,16 +1,21 @@
-// Custom Wrapper to protect admin only routes
+
+
 import React from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const AdminRoute = ({ children }) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
-  if (!user || !isAdmin) {
-    return <h2 className="p-6 text-red-600">Access Denied</h2>;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role !== "admin") {
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
 export default AdminRoute;
-

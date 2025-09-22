@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Optional: local JSON data files (if not meant to be committed)
+csvjson.json
+
+# Build outputs (if you create any in future)
+dist/
+build/
+
+# IDE / editor configs
+.vscode/
+.idea/
+
+

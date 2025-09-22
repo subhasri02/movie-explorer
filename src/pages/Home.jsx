@@ -1,8 +1,6 @@
  // Home Page with Movie Grid, Search, Filter, Sort, and Booking Modal
  // movies are fetched , filtered , dispalyed and booked
 
-
-
 import { useEffect, useState } from "react";
 import { fetchMovies } from "../services/api";
 import BookingModal from "../components/BookingModal";
@@ -32,7 +30,7 @@ const Home = () => {
   useEffect(() => {
     const fetchAllMovies = async () => {
       let allMovies = [];
-      const totalPages = 5; // adjust as needed
+      const totalPages = 5; 
       for (let p = 1; p <= totalPages; p++) {
         const data = await fetchMovies(p);
         allMovies = [...allMovies, ...data];

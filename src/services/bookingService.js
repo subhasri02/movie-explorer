@@ -1,30 +1,27 @@
 
-import { db } from "../auth/firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import axios from "axios";
 
-const BOOKINGS_COLLECTION = "bookings";
+const API_URL = "http://localhost:5000/api/bookings";
 
-// Save booking
-export const addBooking = async (booking) => {
-  try {
-    await addDoc(collection(db, BOOKINGS_COLLECTION), booking);
-    return true;
-  } catch (err) {
-    console.error("Error adding booking:", err);
-    throw err;
-  }
+// Create booking
+export const createBooking = async (bookingData) => {
+  const res = await axios.post(API_URL, bookingData);
+  return res.data;
 };
 
 // Get all bookings
 export const getBookings = async () => {
-  try {
-    const snapshot = await getDocs(collection(db, BOOKINGS_COLLECTION));
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-  } catch (err) {
-    console.error("Error fetching bookings:", err);
-    return [];
-  }
+  const res = await axios.get(API_URL);
+  return res.data;
+};
+
+// Delete booking
+export const deleteBooking = async (id) => {
+  const res = await axios.delete(`${API_URL}/${id}`);
+  return res.data;
+};
+
+export const getStats = async () => {
+  const { data } = await axios.get(`${API_URL}/stats`);
+  return data;
 };
